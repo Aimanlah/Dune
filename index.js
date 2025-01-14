@@ -1,4 +1,5 @@
 require('dotenv').config();  // Add this line at the top
+require('dotenv').config();  // Add this line at the top
 const express = require('express');
 const app = express();
 const port = process.env.PORT || 3001;
@@ -262,20 +263,3 @@ app.get('/viewUserByAdmin', async (req, res) => {
     res.status(500).send("Error viewing user by admin");
   }
 });
-
-/*app.get('/existingUser', async (req, res) => {
-  try {
-    const { user_id } = req.query;  // Extract user_id from the query string
-    const userExists = await existingUser(client, user_id);  // Call the existingUser function
-    if (userExists) {
-      res.status(200).send(`User with ID ${user_id} exists.`);
-    } else {
-      res.status(404).send(`User with ID ${user_id} does not exist.`);
-    }
-  } catch (error) {
-    console.error('Error in /existingUser route:', error);
-    res.status(500).send('Internal server error');
-  }
-});
-
-// (Other route handlers here)*/
