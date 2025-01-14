@@ -252,7 +252,7 @@ app.get('/viewLeaderboard', async (req, res) => {
 
 app.get('/viewUserByAdmin', async (req, res) => {
   try {
-    const { user_id } = req.query; // Use query parameters for GET requests
+    const { user_id } = req.query; // Use query parameters for GET requests arvinth
     if (!user_id) {
       return res.status(400).send("user_id is required");
     }
