@@ -1,10 +1,10 @@
+require('dotenv').config();  // Add this line at the top
 const express = require('express');
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3001;
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const jwt = require('jsonwebtoken');
 
-// Importing functions from other files
 const {
   createUser,
   createItem,
@@ -52,53 +52,29 @@ app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
 
-// MongoDB connection URI
-const uri = "mongodb+srv://namia:sayanak4flat@dune.v70iijj.mongodb.net/?retryWrites=true&w=majority&appName=DUNE";
-
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
+const uri = process.env.MONGODB_URI;
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
     strict: true,
-    deprecationErrors: true,
+    deprecationErrors:true
   }
 });
 
 async function run() {
   try {
-    // Connect the client to the server (optional starting in v4.7)
     await client.connect();
-    // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
-
-    // Example usage of createUser function
-    await createUser(client, "user_id_1", "username1", "password1", "email1@example.com");
-
-    // Example usage of findUserByUsername function
-    const user = await findUserByUsername(client, "username1");
-    console.log("User found by username:", user);
-
-    // Example usage of generateToken function
-    const token = await generateToken(user);
-    console.log("Generated token:", token);
-
-    // Example usage of viewLeaderboard function
-    const leaderboard = await viewLeaderboard(client, "user_id_1");
-    console.log("Leaderboard:", leaderboard);
-
   } catch (error) {
     console.error("Error in run function:", error);
-  } finally {
-    // Ensures that the client will close when you finish/error
-    await client.close();
   }
 }
 
 run().catch(console.dir);
 
-// Add routes for various functionalities
-app.post('/createUser', ADMIN, async (req, res) => {
+// Routes for child functions
+app.post('/createUser', async (req, res) => {
   try {
     const { user_id, username, password, email } = req.body;
     await createUser(client, user_id, username, password, email);
@@ -108,9 +84,50 @@ app.post('/createUser', ADMIN, async (req, res) => {
   }
 });
 
-app.get('/findUserByUsername/:username', USER, async (req, res) => {
+app.post('/createItem', async (req, res) => {
   try {
-    const username = req.params.username;
+    const { item_id, name, description, type, attributes, rarity } = req.body;
+    await createItem(client, item_id, name, description, type, attributes, rarity);
+    res.status(201).send("Item created successfully");
+  } catch (error) {
+    res.status(500).send("Error creating item");
+  }
+});
+
+app.post('/createMonster', async (req, res) => {  
+  try {
+    const { monster_id, name, attributes, location } = req.body;
+    await createMonster(client, monster_id, name, attributes, location);
+    res.status(201).send("Monster created successfully");
+  } catch (error) {
+    res.status(500).send("Error creating monster");
+  }
+});
+
+app.post('/createTransaction', async (req, res) => {
+  try {
+    const { transaction_id, user_id, item_id, transaction_type, amount, date } = req.body;
+    await createTransaction(client, transaction_id, user_id, item_id, transaction_type, amount, date);
+    res.status(201).send("Transaction created successfully");
+  } catch (error) {
+    res.status(500).send("Error creating transaction");
+  }
+});
+
+app.post('/createWeapon', async (req, res) => {
+  try {
+    const { weapon_id, name, description, type, attributes, rarity } = req.body;
+    await createWeapon(client, weapon_id, name, description, type, attributes, rarity);
+    res.status(201).send("Weapon created successfully");
+  } catch (error) {
+    res.status(500).send("Error creating weapon");
+  }
+});
+
+
+app.get('/findUserByUsername', async (req, res) => {
+  try {
+    const { username } = req.query; // Use req.query to get the username from the query string
     const user = await findUserByUsername(client, username);
     if (user) {
       res.status(200).send(user);
@@ -118,49 +135,147 @@ app.get('/findUserByUsername/:username', USER, async (req, res) => {
       res.status(404).send("User not found");
     }
   } catch (error) {
-    res.status(500).send("Error finding user");
+    res.status(500).send("Error finding user by username");
   }
 });
 
-app.get('/viewLeaderboard', USER, async (req, res) => {
+app.get('/findUserById', async (req, res) => {
   try {
-    const leaderboard = await viewLeaderboard(client, req.user.user_id);
-    res.status(200).send(leaderboard);
+    const { user_id } = req.body;
+    const user = await findUserById(client, user_id);
+    res.status(200).send(user);
   } catch (error) {
-    res.status(500).send("Error retrieving leaderboard");
+    res.status(500).send("Error finding user by ID");
   }
 });
 
-app.delete('/deleteUser/:user_id', ADMIN, async (req, res) => {
+app.get('/existingUser', async (req, res) => {
   try {
-    const user_id = req.params.user_id;
+    const { user_id } = req.body;
+    const userExists = await existingUser(client, user_id);
+    res.status(200).send(userExists);
+  } catch (error) {
+    res.status(500).send("Error checking existing user");
+  }
+}); 
+
+app.get('/existingItem', async (req, res) => {
+  try {
+    const { item_id } = req.body;
+    const itemExists = await existingItem(client, item_id);
+    res.status(200).send(itemExists);
+  } catch (error) {
+    res.status(500).send("Error checking existing item");
+  }
+}); 
+
+app.get('/existingMonster', async (req, res) => {
+  try {
+    const { monster_id } = req.body;
+    const monsterExists = await existingMonster(client, monster_id);
+    res.status(200).send(monsterExists);
+  } catch (error) {
+    res.status(500).send("Error checking existing monster");
+  }
+});
+
+app.get('/existingWeapon', async (req, res) => {
+  try {
+    const { weapon_id } = req.body;
+    const weaponExists = await existingWeapon(client, weapon_id);
+    res.status(200).send(weaponExists);
+  } catch (error) {
+    res.status(500).send("Error checking existing weapon");
+  }
+}); 
+
+app.post('/generateToken', async (req, res) => {
+  try {
+    const { user } = req.body;
+    const token = await generateToken(user);
+    res.status(200).send(token);
+  } catch (error) {
+    res.status(500).send("Error generating token");
+  }
+});
+
+app.post('/monsterslain', async (req, res) => {
+  try {
+    const { monster_id } = req.body;
+    await monsterslain(client, monster_id);
+    res.status(200).send("Monster slain successfully");
+  } catch (error) {
+    res.status(500).send("Error slaying monster");
+  }
+}); 
+
+app.delete('/deleteUser', async (req, res) => {
+  try {
+    const { user_id } = req.body; // Ensure user_id is sent in the body of the request
+    if (!user_id) {
+      return res.status(400).send("user_id is required");
+    }
     await deleteUser(client, user_id);
     res.status(200).send("User deleted successfully");
   } catch (error) {
+    console.error("Error in /deleteUser:", error);
     res.status(500).send("Error deleting user");
   }
 });
 
-app.get('/reportUser/:user_id', ADMIN, async (req, res) => {
+
+app.get('/reportUser', async (req, res) => {
   try {
-    const user_id = req.params.user_id;
-    const report = await reportUser(client, user_id);
-    res.status(200).send(report);
+    const { user_id } = req.query; // Use query parameters for GET requests
+    if (!user_id) {
+      return res.status(400).send("user_id is required");
+    }
+    const user = await reportUser(client, user_id);
+    res.status(200).send(user);
   } catch (error) {
-    res.status(500).send("Error retrieving report");
+    console.error("Error in /reportUser:", error);
+    res.status(500).send("Error reporting user");
   }
 });
 
-app.get('/viewUserByAdmin/:user_id', ADMIN, async (req, res) => {
+
+app.get('/viewLeaderboard', async (req, res) => {
   try {
-    const user_id = req.params.user_id;
-    const user = await viewUserByAdmin(client, user_id);
-    if (user) {
-      res.status(200).send(user);
-    } else {
-      res.status(404).send("User not found");
-    }
+    const leaderboard = await viewLeaderboard(client);
+    res.status(200).send(leaderboard);
   } catch (error) {
-    res.status(500).send("Error retrieving user details");
+    console.error("Error in /viewLeaderboard:", error);
+    res.status(500).send("Error viewing leaderboard");
   }
 });
+
+app.get('/viewUserByAdmin', async (req, res) => {
+  try {
+    const { user_id } = req.query; // Use query parameters for GET requests
+    if (!user_id) {
+      return res.status(400).send("user_id is required");
+    }
+    const user = await viewUserByAdmin(client, user_id);
+    res.status(200).send(user);
+  } catch (error) {
+    console.error("Error in /viewUserByAdmin:", error);
+    res.status(500).send("Error viewing user by admin");
+  }
+});
+
+/*app.get('/existingUser', async (req, res) => {
+  try {
+    const { user_id } = req.query;  // Extract user_id from the query string
+    const userExists = await existingUser(client, user_id);  // Call the existingUser function
+    if (userExists) {
+      res.status(200).send(`User with ID ${user_id} exists.`);
+    } else {
+      res.status(404).send(`User with ID ${user_id} does not exist.`);
+    }
+  } catch (error) {
+    console.error('Error in /existingUser route:', error);
+    res.status(500).send('Internal server error');
+  }
+});
+
+// (Other route handlers here)*/

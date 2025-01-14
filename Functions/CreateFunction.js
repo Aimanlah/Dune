@@ -52,7 +52,7 @@ async function createItem(client, item_id, name, description, type, attributes, 
 async function createMonster(client, monster_id, name, attributes, location) {
     try {
         const database = client.db('TheDune');
-        const collection = database.collection('monsters');
+        const collection = database.collection('monster');
 
         const monster = {
             monster_id: monster_id,
@@ -71,7 +71,7 @@ async function createMonster(client, monster_id, name, attributes, location) {
 async function createTransaction(client, transaction_id, user_id, item_id, transaction_type, amount, date) {
     try {
         const database = client.db('TheDune');
-        const collection = database.collection('transactions');
+        const collection = database.collection('transaction');
 
         const transaction = {
             transaction_id: transaction_id,

@@ -2,7 +2,7 @@ async function monsterslain(client, user_id, monster_id) {
     try {
         const database = client.db('TheDune');
         const usersCollection = database.collection('users');
-        const monstersCollection = database.collection('monsters');
+        const monstersCollection = database.collection('monster');
 
         const user = await usersCollection.findOne({ user_id: user_id });
         const monster = await monstersCollection.findOne({ monster_id: monster_id });
